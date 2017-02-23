@@ -11,7 +11,7 @@
 using namespace std;
 
 //measuration interval
-const int MIN = 1;
+const int MIN = 5;
 
 class BattTracker {
 	int h;
