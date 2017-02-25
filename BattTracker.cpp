@@ -1,6 +1,6 @@
 #include "BattStats.h"
 
-void BattTracker::start(bool clean){
+void BattTracker::start(int MIN, bool clean){
 	auto t = time(nullptr);
 	auto tm = *localtime(&t);
 	if(isRunning()){ //already running
@@ -21,9 +21,9 @@ void BattTracker::start(bool clean){
 		remove("battstats.log");
 	}
 
-	ff.open("battstats.log");
+	ff.open("battstats.log", ios::out|ios::app);
 	if(!ff){
-		cerr<<"Error opening file"<<endl;
+		cerr<<"Error opening log file"<<endl;
 		unlock();
 		exit(1);
 	}
@@ -33,12 +33,12 @@ void BattTracker::start(bool clean){
 	bool status; //0 - charging, 1 - discharging
 	bool lastStatus = 0;
 
-	h = 0;
-	min = -MIN;
+	int h = 0;
+	int min = -MIN;
 
 	//condition will be modified by other istances
 	while(isRunning()){
-		status = isCharging();
+		status = isDischarging();
 		if(status!=lastStatus){
 			lastStatus = !lastStatus;
 			t = time(nullptr);
@@ -88,6 +88,7 @@ bool BattTracker::isRunning(){
 void BattTracker::status(){
 	cout<<"Status: \t\t\t"<< (isRunning() ? "Running" : "Not Running") << endl;
 	int startingPercentage;
+	int min;
 	if(isRunning()){
 		ifstream flock("battstats.lock");
 		flock>>startingPercentage;
@@ -100,7 +101,7 @@ void BattTracker::status(){
 
 	cout<<"Current battery percentage: \t"<<batteryLevel()<<endl;
 
-	if(isRunning()){
+	if(isRunning() && isDischarging()){
 		int currentPercentage = batteryLevel();
 		cout<<"Estimated time remaining: \t";
 		if(startingPercentage == currentPercentage || min == 0){
@@ -127,10 +128,10 @@ int BattTracker::batteryLevel(){
 	return percentage;
 }
 
-bool BattTracker::isCharging(){
+bool BattTracker::isDischarging(){
 	//(system("if [ `cat /sys/class/power_supply/BAT1/status` == 'Discharging' ]; then exit 1; fi; exit 0"))
 	ifstream fstatus("/sys/class/power_supply/BAT1/status");
 	char c;
 	fstatus>>c;
-	return (c=='D' ? 1 : 0); //D for "Discharging" (reads only first char)
+	return (c=='D' ? true : false); //D for "Discharging" (reads only first char)
 }

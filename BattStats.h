@@ -10,18 +10,13 @@
 #include <unistd.h>
 using namespace std;
 
-//measuration interval
-const int MIN = 5;
-
 class BattTracker {
-	int h;
-	int min;
 	bool isRunning(); //1 - running, 0 - stopped
 	int batteryLevel();
-	bool isCharging();
+	bool isDischarging();
 
 	public:
-		void start(bool clean = 0);
+		void start(int MIN, bool clean); //first condition - clean start, second condition
 		void unlock();
 		void status(); //manages status screen
 		void kill(); //kills first thread, inthand manages exit
